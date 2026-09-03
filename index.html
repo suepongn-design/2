@@ -1052,7 +1052,9 @@ function sendHeartbeat(){
     method:'POST',
     headers: sbH({'Prefer':'resolution=merge-duplicates,return=minimal'}),
     body: JSON.stringify([entry])
-  }).catch(function(){});
+  })
+    .then(function(r){ if(!r.ok){ r.text().then(function(t){ console.warn('[edd_presence] heartbeat failed', r.status, t); }); } })
+    .catch(function(e){ console.warn('[edd_presence] heartbeat error', e); });
 }
 
 function startHeartbeat(){
@@ -1073,7 +1075,11 @@ async function refreshOnlineCount(){
   try{
     var cutoff=new Date(Date.now()-ONLINE_WINDOW_MIN*60000).toISOString();
     var res=await fetch(SB_URL+'/rest/v1/'+TBL_PRESENCE+'?select=name,location,last_seen&last_seen=gte.'+encodeURIComponent(cutoff)+'&order=last_seen.desc',{headers:sbH()});
-    if(!res.ok){ throw new Error('http '+res.status); }
+    if(!res.ok){
+      var t=await res.text();
+      console.warn('[edd_presence] fetch failed', res.status, t);
+      throw new Error('http '+res.status);
+    }
     var rows=await res.json();
     if(cntEl) cntEl.textContent=rows.length;
     if(namesEl) namesEl.textContent=rows.length? ('('+rows.map(function(r){return r.name;}).join(', ')+')') : '';
