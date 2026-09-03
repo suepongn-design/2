@@ -159,6 +159,7 @@ tr.trow-found td{background:#fff3b0;font-weight:700}
 .online-pill b{font-size:14px}
 #onlineNames{font-weight:400;color:#3a8a3a;font-size:10px}
 .log-meta{font-size:10px;color:var(--yd);font-weight:700;margin-top:3px}
+.online-badge{font-size:10px;font-weight:900;color:#1e7a1e;background:#eafbea;border:1px solid #b7e8b7;padding:3px 7px;border-radius:20px}
 </style>
 </head>
 <body>
@@ -202,6 +203,7 @@ tr.trow-found td{background:#fff3b0;font-weight:700}
   </div>
   <div class="top-right">
     <div class="conn-row"><div class="dot" id="dot"></div><span id="connTxt">ออฟไลน์</span></div>
+    <div class="online-badge" id="topOnlineBadge" style="display:none">🟢 <span id="topOnlineCount">-</span></div>
     <div class="dhl-badge">DHL</div>
   </div>
 </div>
@@ -368,9 +370,7 @@ function setTab(name){
   }
   if(name==='log'){
     renderLogView(true);
-    startOnlinePolling();
-  }else{
-    stopOnlinePolling();
+    refreshOnlineCount();
   }
 }
 
@@ -974,6 +974,7 @@ function initLoginGate(){
       currentUser=JSON.parse(saved);
       hideLoginGate();
       startHeartbeat();
+      startOnlinePolling();
       return;
     }
   }catch(e){}
@@ -995,7 +996,9 @@ function logoutUser(){
   try{ sessionStorage.removeItem('edd_user'); }catch(e){}
   currentUser=null;
   stopHeartbeat();
+  stopOnlinePolling();
   document.getElementById('userTag').style.display='none';
+  document.getElementById('topOnlineBadge').style.display='none';
   var st=document.getElementById('settingsUserTxt');
   if(st) st.textContent='—';
   document.getElementById('lgLocation').value='';
@@ -1016,6 +1019,7 @@ function submitLogin(){
   hideLoginGate();
   logAccess(currentUser);
   startHeartbeat();
+  startOnlinePolling();
 }
 
 // บันทึกการเข้าใช้งาน: เก็บไว้ในเครื่อง (เสมอ) + พยายามซิงค์ขึ้นคลาวด์ (ถ้ามีตาราง edd_access_log)
@@ -1064,17 +1068,21 @@ async function refreshOnlineCount(){
   var pill=document.getElementById('onlinePill');
   var cntEl=document.getElementById('onlineCount');
   var namesEl=document.getElementById('onlineNames');
-  if(!pill) return;
+  var topBadge=document.getElementById('topOnlineBadge');
+  var topCnt=document.getElementById('topOnlineCount');
   try{
     var cutoff=new Date(Date.now()-ONLINE_WINDOW_MIN*60000).toISOString();
     var res=await fetch(SB_URL+'/rest/v1/'+TBL_PRESENCE+'?select=name,location,last_seen&last_seen=gte.'+encodeURIComponent(cutoff)+'&order=last_seen.desc',{headers:sbH()});
     if(!res.ok){ throw new Error('http '+res.status); }
     var rows=await res.json();
-    cntEl.textContent=rows.length;
-    namesEl.textContent=rows.length? ('('+rows.map(function(r){return r.name;}).join(', ')+')') : '';
-    pill.style.display='flex';
+    if(cntEl) cntEl.textContent=rows.length;
+    if(namesEl) namesEl.textContent=rows.length? ('('+rows.map(function(r){return r.name;}).join(', ')+')') : '';
+    if(pill) pill.style.display='flex';
+    if(topCnt) topCnt.textContent=rows.length+' คนออนไลน์';
+    if(topBadge) topBadge.style.display='flex';
   }catch(e){
-    pill.style.display='none'; // ยังไม่มีตาราง edd_presence หรือเชื่อมต่อไม่ได้ — ซ่อนไว้เงียบๆ
+    if(pill) pill.style.display='none';
+    if(topBadge) topBadge.style.display='none'; // ยังไม่มีตาราง edd_presence หรือเชื่อมต่อไม่ได้ — ซ่อนไว้เงียบๆ
   }
 }
 function startOnlinePolling(){
