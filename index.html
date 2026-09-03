@@ -1,269 +1,136 @@
 <!DOCTYPE html>
-
 <html lang="th">
-
 <head>
-
 <meta charset="UTF-8">
-
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-
 <title>DHL EDD Scanner</title>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
 <style>
-
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-
 :root{
-
   --y:#FFCC00;--yd:#B8860B;--r:#D40511;--w:#fff;
-
   --bg:#FFFBEA;--card:#fffdf6;--dark:#2b2410;--txt:#2b2410;
-
   --muted:#9c9270;--border:#f0e3ad;--border2:#e8d98a
-
 }
-
 html,body{width:100%;overflow-x:hidden}
-
 body{background:var(--bg);font-family:Arial,sans-serif;color:var(--txt);font-size:14px;padding-bottom:64px}
 
-
-
 .topbar{background:#fff;padding:0 12px;display:flex;align-items:center;gap:8px;height:52px;border-bottom:3px solid var(--y);width:100%;box-shadow:0 1px 8px rgba(255,204,0,.15);position:sticky;top:0;z-index:50}
-
 .logo-icon{width:30px;height:30px;background:var(--y);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
-
 .logo-name{font-size:13px;font-weight:900;color:var(--dark);line-height:1.2}
-
 .logo-sub{font-size:9px;color:var(--muted)}
-
 .top-right{margin-left:auto;display:flex;align-items:center;gap:6px;flex-shrink:0}
-
 .dhl-badge{background:var(--r);color:#fff;font-size:9px;font-weight:900;padding:3px 8px;border-radius:4px;letter-spacing:1px;font-style:italic}
-
 .conn-row{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--muted)}
-
 .dot{width:8px;height:8px;border-radius:50%;background:#bbb;flex-shrink:0}
-
 .dot.on{background:#22c55e;box-shadow:0 0 5px #22c55e;animation:dotBlink 1.4s ease-in-out infinite}
-
 .dot.off{background:var(--r)}
-
 @keyframes dotBlink{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.85)}}
 
-
-
 .sound-banner{background:#fff6d0;border-bottom:1.5px solid var(--border2);padding:9px 14px;display:flex;align-items:center;gap:10px;cursor:pointer}
-
 .sound-banner.on{background:#eaf7ea;border-bottom-color:#bfe6bf}
-
 .sb-icon{font-size:18px;flex-shrink:0}
-
 .sb-txt{flex:1;min-width:0}
-
 .sb-label{font-size:12px;font-weight:900;color:#8a6d00}
-
 .sb-sub{font-size:10px;color:#a3934d}
-
 .sound-banner.on .sb-label{color:#1f7a3d}
-
 .sound-banner.on .sb-sub{color:#4f9a68}
-
 .swtch{width:38px;height:22px;border-radius:20px;background:#d8cf9e;position:relative;flex-shrink:0;transition:background .15s}
-
 .swtch.on{background:#3bb463}
-
 .swtch-knob{width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:left .15s}
-
 .swtch.on .swtch-knob{left:18px}
 
-
-
 .main{width:100%;max-width:480px;margin:0 auto;padding:10px 10px 20px}
-
 .view{display:none}
-
 .view.active{display:block}
 
-
-
 .section{border:2px dashed var(--y);border-radius:12px;padding:12px;margin-bottom:10px;background:var(--card)}
-
 .section-title{font-size:12px;font-weight:900;color:var(--dark);margin-bottom:8px;display:flex;align-items:center;gap:6px}
 
-
-
 .room-head{font-size:12px;font-weight:700;color:var(--dark);margin-bottom:2px;text-align:center}
-
 .room-sub{font-size:10px;color:var(--muted);margin-bottom:10px;text-align:center}
-
 .pins{display:flex;gap:6px;justify-content:center;margin-bottom:8px}
-
 .pin{width:56px;height:54px;background:var(--w);border:2px solid var(--border);border-radius:10px;font-size:26px;font-weight:900;color:var(--dark);text-align:center;outline:none}
-
 .pin:focus{border-color:var(--y);box-shadow:0 0 0 3px rgba(255,204,0,.25)}
-
 .pin-btns{display:flex;gap:8px;justify-content:center}
-
 .btn-dice{width:42px;height:42px;background:#fffef0;border:2px solid var(--y);border-radius:9px;font-size:18px;cursor:pointer;color:#111;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-
 .btn-enter{background:var(--y);border:none;border-radius:10px;padding:10px 0;font-size:13px;font-weight:900;color:#111;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;flex:1}
-
 .btn-enter:active{transform:scale(.97)}
-
 .room-status{font-size:11px;color:var(--r);font-weight:700;margin-top:6px;min-height:16px;text-align:center}
 
-
-
 .active-row{display:none;margin-bottom:8px;align-items:center;gap:6px;flex-wrap:wrap}
-
 .room-pill{display:inline-flex;align-items:center;gap:5px;background:var(--y);border-radius:20px;padding:4px 10px;font-size:11px;font-weight:900;color:#111}
-
 .leave-btn{padding:4px 10px;border:1.5px solid var(--border);border-radius:20px;font-size:11px;background:#fff;cursor:pointer;font-weight:700;color:#555}
 
-
-
 .btn-red{width:100%;padding:11px;background:var(--r);border:none;border-radius:10px;font-size:12px;font-weight:900;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;margin-bottom:8px}
-
 .btn-red:active{background:#b30410}
-
 .btn-yellow{width:100%;padding:11px;background:var(--y);border:none;border-radius:10px;font-size:12px;font-weight:900;color:#111;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;margin-bottom:8px}
-
 .btn-yellow.on{background:var(--r);color:#fff}
-
-
 
 input[type=file]{font-size:11px;color:var(--txt);width:100%}
 
-
-
 #scanInput{width:100%;padding:11px 12px;background:var(--w);border:2px solid var(--y);border-radius:10px;font-size:17px;font-weight:900;outline:none;color:#111;letter-spacing:1px;text-align:center;margin-bottom:8px}
-
 #scanInput::placeholder{color:#ccc;font-size:11px;font-weight:normal;letter-spacing:0}
-
 #scanInput:focus{box-shadow:0 0 0 3px rgba(255,204,0,.2)}
 
-
-
 .cam-wrap{border-radius:10px;overflow:hidden;position:relative;background:#000;display:none;margin-bottom:8px}
-
 #camVideo{width:100%;display:block;height:220px;object-fit:cover}
-
 .cam-guide{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:94%;height:65%;border:3px solid var(--y);border-radius:8px;pointer-events:none;box-shadow:0 0 0 9999px rgba(0,0,0,.35)}
-
 .cam-guide::before,.cam-guide::after{content:'';position:absolute;width:26px;height:26px;border-color:var(--y);border-style:solid}
-
 .cam-guide::before{top:-3px;left:-3px;border-width:5px 0 0 5px;border-radius:5px 0 0 0}
-
 .cam-guide::after{bottom:-3px;right:-3px;border-width:0 5px 5px 0;border-radius:0 0 5px 0}
-
 .cam-lock{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.7);color:var(--y);font-size:10px;font-weight:700;padding:3px 12px;border-radius:20px;white-space:nowrap;display:none;max-width:90%;overflow:hidden;text-overflow:ellipsis}
 
-
-
 .result-zone{border-radius:14px;padding:26px 16px;text-align:center;margin-bottom:10px;background:#fff8e0;border:2px solid var(--border2);transition:background .2s,border-color .2s}
-
 .result-zone.st-found{background:#fff3b0;border-color:#e0c23a}
-
 .result-zone.st-today{background:#fde2e2;border-color:var(--r)}
-
 .result-zone.st-none{background:#f1efe4;border-color:#d8d2b8}
-
 .result-zone.st-wait{background:#f1efe4;border-color:#d8d2b8}
-
 .rz-icon{font-size:34px;line-height:1}
-
 .rz-parcel{font-size:19px;font-weight:900;color:var(--dark);margin-top:10px;word-break:break-all}
-
 .rz-edd{font-size:14px;font-weight:700;color:var(--muted);margin-top:4px}
-
 .result-zone.st-today .rz-edd{color:var(--r)}
-
 .result-zone.st-today .rz-parcel{color:var(--r)}
-
 .rz-hint{font-size:11px;color:var(--muted);margin-top:8px}
 
-
-
 .sbar{border-radius:9px;padding:7px 10px;font-size:10px;font-weight:700;border:1.5px solid transparent;margin-top:6px}
-
 .sbar.idle{background:#f7f0d8;color:var(--muted);border-color:var(--border)}
-
 .sbar.ok{background:#eaf7ea;color:#1f7a3d;border-color:#bfe6bf}
-
 .sbar.err{background:#fdeaea;color:var(--r);border-color:#f5c2c2}
-
 .sbar.warn{background:#fff3cc;color:#8a6d00;border-color:var(--y)}
 
-
-
 .stat-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
-
 .stat-card{border-radius:10px;padding:10px;text-align:center}
-
 .stat-card.today{background:#fde2e2}
-
 .stat-card.total{background:#fff3cc}
-
 .stat-num{font-size:19px;font-weight:900;color:var(--dark)}
-
 .stat-num.today{color:var(--r)}
-
 .stat-lbl{font-size:10px;color:var(--muted);font-weight:700}
 
-
-
 .tbl-section{border:1.5px solid var(--border);border-radius:12px;overflow:hidden;margin-top:4px;margin-bottom:16px;background:var(--card)}
-
 .tbl-head{background:var(--dark);padding:8px 12px;display:flex;align-items:center;gap:6px}
-
 .tbl-head span{font-size:11px;font-weight:700;color:var(--y)}
-
 .search-row{padding:7px 8px;background:#fff6d0;border-bottom:1px solid var(--border)}
-
 input.srch{width:100%;padding:6px 9px;border:1.5px solid var(--border);border-radius:8px;font-size:11px;outline:none;background:#fff;color:#111}
-
 input.srch:focus{border-color:var(--y)}
-
 .tbl-wrap{overflow-y:auto;max-height:280px;-webkit-overflow-scrolling:touch;overflow-x:hidden}
-
 table{width:100%;border-collapse:collapse;font-size:11px}
-
 th{background:var(--y);color:#111;padding:7px 8px;text-align:left;font-weight:700;font-size:10px;position:sticky;top:0;z-index:1}
-
 td{padding:7px 8px;border-bottom:1px solid #f0ebc8;color:#333}
-
 tr:hover td{background:#fffdf0}
-
 tr.trow-today td{color:var(--r);font-weight:700;background:#fdeaea}
-
 tr.trow-found td{background:#fff3b0;font-weight:700}
-
 .chip{display:inline-block;padding:2px 6px;border-radius:20px;font-size:9px;font-weight:700}
-
 .chip-today{background:var(--r);color:#fff}
-
 .chip-ok{background:var(--y);color:#333}
 
-
-
 .tabbar{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1.5px solid var(--border);display:flex;z-index:50;box-shadow:0 -2px 10px rgba(0,0,0,.05)}
-
 .tab-btn{flex:1;border:none;background:none;padding:9px 0 8px;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;color:var(--muted)}
-
 .tab-btn .ic{font-size:19px}
-
 .tab-btn .lb{font-size:10px;font-weight:700}
-
 .tab-btn.active{color:var(--yd)}
-
 .badge-dot{position:absolute;margin-left:14px;margin-top:-2px;width:8px;height:8px;border-radius:50%;background:var(--r)}
-
 .tab-wrap{position:relative;display:flex;flex:1}
-
 
 /* ===== LOGIN GATE ===== */
 #loginGate{display:flex;position:fixed;inset:0;background:linear-gradient(160deg,#fff8d8,#fff1b0);z-index:1000;flex-direction:column;align-items:center;justify-content:center;padding:20px}
@@ -287,1776 +154,1024 @@ tr.trow-found td{background:#fff3b0;font-weight:700}
 .log-loc{font-size:11px;color:var(--yd);font-weight:700}
 .log-time{font-size:10px;color:var(--muted);margin-top:2px}
 .log-empty{font-size:11px;color:var(--muted);text-align:center;padding:20px 0}
+
+.online-pill{margin:10px 8px 0;padding:8px 12px;background:#eafbea;border:1.5px solid #b7e8b7;border-radius:10px;font-size:12px;font-weight:700;color:#1e7a1e;display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+.online-pill b{font-size:14px}
+#onlineNames{font-weight:400;color:#3a8a3a;font-size:10px}
+.log-meta{font-size:10px;color:var(--yd);font-weight:700;margin-top:3px}
 </style>
-
 </head>
-
 <body>
 
-
-
 <!-- Loading Overlay -->
-
 <div id="loadOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:999;flex-direction:column;align-items:center;justify-content:center;gap:12px">
-
   <div style="background:#fff;border-radius:14px;padding:20px 28px;text-align:center;min-width:220px">
-
     <div id="loadTitle" style="font-size:14px;font-weight:900;color:var(--dark);margin-bottom:6px">⏳ กำลังโหลด...</div>
-
     <div id="loadSub" style="font-size:11px;color:var(--muted)">กรุณารอสักครู่</div>
-
     <div style="height:8px;background:#f0ebc8;border-radius:4px;margin-top:10px;overflow:hidden">
-
       <div id="loadBar" style="height:100%;background:var(--y);border-radius:4px;width:0%;transition:width .3s"></div>
-
     </div>
-
   </div>
-
 </div>
-
-
 
 <!-- Login Gate -->
-
 <div id="loginGate">
-
   <div class="lg-card">
-
     <div class="lg-logo">📦</div>
-
     <div class="lg-title">DHL · EDD SCANNER</div>
-
     <div class="lg-sub">กรุณาระบุตัวตนก่อนเข้าใช้งาน</div>
-
     <div class="lg-field">
-
       <div class="lg-label">📍 พื้นที่ (เช่น Depot BPE)</div>
-
       <input class="lg-input" id="lgLocation" placeholder="Depot BPE" autocomplete="off">
-
     </div>
-
     <div class="lg-field">
-
       <div class="lg-label">👤 ชื่อผู้เข้าใช้ (เช่น นัด)</div>
-
       <input class="lg-input" id="lgName" placeholder="นัด" autocomplete="off">
-
     </div>
-
     <div class="lg-err" id="lgErr"></div>
-
     <button class="lg-btn" onclick="submitLogin()">✅ เข้าใช้งาน</button>
-
   </div>
-
 </div>
-
-
 
 <div class="topbar">
-
   <div class="logo-icon">📦</div>
-
   <div>
-
     <div class="logo-name">DHL · EDD SCANNER</div>
-
     <div class="logo-sub" id="roomTag">ยังไม่เข้าห้อง</div>
-
     <div class="user-tag" id="userTag" style="display:none">👤 <span id="userTagTxt"></span></div>
-
   </div>
-
   <div class="top-right">
-
     <div class="conn-row"><div class="dot" id="dot"></div><span id="connTxt">ออฟไลน์</span></div>
-
     <div class="dhl-badge">DHL</div>
-
   </div>
-
 </div>
-
-
 
 <div class="sound-banner" id="soundBanner" onclick="toggleSound()">
-
   <i class="sb-icon" id="soundIcon">🔊</i>
-
   <div class="sb-txt">
-
     <div class="sb-label" id="soundLabel">เปิดเสียงแจ้งเตือนก่อนเริ่มงาน</div>
-
     <div class="sb-sub" id="soundSub">ใช้เสียงและสั่นบอกผลสแกนตอนไม่ได้มองจอ</div>
-
   </div>
-
   <div class="swtch" id="soundSwitch"><div class="swtch-knob"></div></div>
-
 </div>
-
-
 
 <div class="main">
 
-
-
 <!-- ============ SCAN VIEW ============ -->
-
 <div class="view active" id="viewScan">
 
-
-
   <div class="result-zone st-wait" id="resultZone">
-
     <div class="rz-icon" id="rzIcon">🔍</div>
-
     <div class="rz-parcel" id="rParcel">พร้อมสแกน</div>
-
     <div class="rz-edd" id="rEdd">เล็งบาร์โค้ดในกรอบ หรือใช้ปืนยิง</div>
-
     <div class="today-flag" id="todayFlag" style="display:none;font-size:12px;font-weight:900;color:#fff;background:var(--r);border-radius:20px;padding:4px 12px;margin-top:8px;display:inline-block">🚚 นำออกส่งวันนี้</div>
-
   </div>
-
-
 
   <input type="text" id="scanInput" placeholder="คลิกตรงนี้แล้วใช้ปืนยิงบาร์โค้ด" autocomplete="off" spellcheck="false">
-
   <button class="btn-yellow" id="camBtn" onclick="toggleCam()">📷 เปิดกล้องสแกน</button>
-
   <div class="cam-wrap" id="camWrap">
-
     <video id="camVideo" autoplay playsinline muted></video>
-
     <div class="cam-guide"></div>
-
     <div class="cam-lock" id="camLock"></div>
-
   </div>
-
   <div id="scanStatus" class="sbar idle">💡 เข้าห้องทำงานและโหลดไฟล์ Excel ก่อน (ไปที่ตั้งค่า)</div>
-
 </div>
-
-
 
 <!-- ============ LIST VIEW ============ -->
-
 <div class="view" id="viewList">
-
   <div class="stat-row">
-
     <div class="stat-card today"><div class="stat-num today" id="statToday">0</div><div class="stat-lbl">EDD วันนี้</div></div>
-
     <div class="stat-card total"><div class="stat-num" id="statTotal">0</div><div class="stat-lbl">ทั้งหมด</div></div>
-
   </div>
-
   <div class="tbl-section">
-
     <div class="tbl-head"><span>📋 รายการพัสดุทั้งหมด</span></div>
-
     <div class="search-row"><input class="srch" id="srch" placeholder="🔍 ค้นหา Parcel ID หรือ EDD..." oninput="renderTable()"></div>
-
     <div class="tbl-wrap" id="tblWrap">
-
       <table>
-
         <thead><tr><th>PARCEL ID</th><th>EDD</th><th>สถานะ</th></tr></thead>
-
         <tbody id="tbody"></tbody>
-
       </table>
-
     </div>
-
   </div>
-
 </div>
-
-
 
 <!-- ============ SETTINGS VIEW ============ -->
-
 <div class="view" id="viewSettings">
 
-
-
   <div class="section" style="display:flex;align-items:center;gap:10px">
-
     <div style="flex:1">
-
       <div class="section-title" style="margin-bottom:2px">👤 ผู้เข้าใช้งาน</div>
-
       <div style="font-size:11px;color:var(--muted)" id="settingsUserTxt">—</div>
-
     </div>
-
     <button class="leave-btn" onclick="logoutUser()">🚪 ออกจากระบบ</button>
-
   </div>
-
-
 
   <div class="section" id="secRoom">
-
     <div class="room-head">☁️ ห้องทำงานออนไลน์</div>
-
     <div class="room-sub">ใส่เลขห้อง 4 หลักเดียวกัน — ทุกเครื่องซิงค์คลาวด์</div>
-
     <div class="pins">
-
       <input class="pin" id="p0" maxlength="1" inputmode="numeric">
-
       <input class="pin" id="p1" maxlength="1" inputmode="numeric">
-
       <input class="pin" id="p2" maxlength="1" inputmode="numeric">
-
       <input class="pin" id="p3" maxlength="1" inputmode="numeric">
-
     </div>
-
     <div class="pin-btns">
-
       <button class="btn-dice" onclick="randRoom()">🎲</button>
-
       <button class="btn-enter" onclick="enterRoom()">📦 เข้าห้อง</button>
-
     </div>
-
     <div id="roomStatus" class="room-status">⚠ ยังไม่ได้เชื่อมต่อห้อง</div>
-
   </div>
-
-
 
   <div class="active-row" id="activeRow">
-
     <div class="room-pill">🏠 ห้อง: <span id="roomLabel">—</span></div>
-
     <button class="leave-btn" onclick="leaveRoom()">← ออก</button>
-
     <button class="leave-btn" onclick="fetchData()" style="background:var(--y);border-color:var(--y)">🔄</button>
-
     <div id="syncStatus" class="sbar idle" style="margin:0;flex:1;min-width:0">รอข้อมูล...</div>
-
   </div>
-
-
 
   <div class="section" style="display:flex;align-items:center;gap:10px">
-
     <div style="flex:1">
-
       <div class="section-title" style="margin-bottom:2px">🔔 เสียงและการสั่นแจ้งเตือน</div>
-
       <div style="font-size:10px;color:var(--muted)">แจ้งผลสแกนแม้ไม่ได้มองจอ</div>
-
     </div>
-
     <div class="swtch" id="soundSwitch2" onclick="toggleSound()"><div class="swtch-knob"></div></div>
-
   </div>
-
-
 
   <div class="section" id="secUpload">
-
     <div class="section-title">📁 อัปโหลด EXCEL</div>
-
     <button class="btn-red" onclick="clearAndUpload()">🗑️ ล้างแล้วอัปโหลดใหม่</button>
-
     <input type="file" id="xlFile" accept=".xlsx,.xls" onchange="handleFile(this.files[0])">
-
     <div id="uploadStatus" class="sbar idle">รอไฟล์ Excel...</div>
-
   </div>
 
-
-
 </div>
-
-
 
 <!-- ============ LOG VIEW ============ -->
-
 <div class="view" id="viewLog">
-
   <div class="tbl-section" style="border:1.5px solid var(--border)">
-
     <div class="tbl-head" style="justify-content:space-between">
-
       <span>📝 Log ผู้เข้าใช้งาน</span>
-
       <button class="leave-btn" style="background:var(--y);border-color:var(--y);padding:3px 10px" onclick="renderLogView(true)">🔄</button>
-
     </div>
-
+    <div id="onlinePill" class="online-pill">🟢 ออนไลน์ตอนนี้: <b id="onlineCount">-</b> คน <span id="onlineNames"></span></div>
     <div id="logSyncStatus" class="sbar idle" style="margin:8px 8px 0">กำลังโหลด...</div>
-
     <div id="logList" style="padding:8px"></div>
-
   </div>
-
 </div>
 
-
-
 </div>
-
-
 
 <div class="tabbar">
-
   <div class="tab-wrap">
-
     <button class="tab-btn active" id="tabScan" onclick="setTab('scan')"><span class="ic">🔫</span><span class="lb">สแกน</span></button>
-
   </div>
-
   <div class="tab-wrap">
-
     <button class="tab-btn" id="tabList" onclick="setTab('list')"><span class="ic">📋</span><span class="lb">รายการ</span></button>
-
     <span class="badge-dot" id="listBadge" style="display:none"></span>
-
   </div>
-
   <button class="tab-btn" id="tabLog" onclick="setTab('log')"><span class="ic">📝</span><span class="lb">Log</span></button>
-
   <button class="tab-btn" id="tabSettings" onclick="setTab('settings')"><span class="ic">⚙️</span><span class="lb">ตั้งค่า</span></button>
-
 </div>
 
-
-
 <script>
-
 var SB_URL    = 'https://kubkriophojmqlnnoins.supabase.co';
-
 var SB_KEY    = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt1YmtyaW9waG9qbXFsbm5vaW5zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgyMjI2OTUsImV4cCI6MjA5Mzc5ODY5NX0.kkbFrRjHsUVHIivzZtNlPFY5C225PxxlAkdQTKfVus4';
-
 var TBL       = 'edd_parcels';
-
 var BATCH     = 500;
-
 var PAGE      = 50000;
-
 var UPLOAD_CON= 3;
-
 var TBL_LOG   = 'edd_access_log';
-
-
+var TBL_PRESENCE = 'edd_presence';
 
 var currentUser=null;
-
 var room='', allData=[], parsedXL=[];
-
 var dataReady=false;
-
 var refreshTmr=null, audioCtx=null, audioReady=false;
-
 var camStream=null, camOn=false, lockedCode='';
 
-
-
 // ── HEADERS ────────────────────────────────────────────────────────
-
 function sbH(ex){
-
   return Object.assign({
-
     'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,
-
     'Content-Type':'application/json','Accept':'application/json'
-
   },ex||{});
-
 }
-
-
 
 // ── TABS ───────────────────────────────────────────────────────────
-
 function setTab(name){
-
   ['scan','list','settings','log'].forEach(function(t){
-
     document.getElementById('view'+t.charAt(0).toUpperCase()+t.slice(1)).classList.toggle('active', t===name);
-
     document.getElementById('tab'+t.charAt(0).toUpperCase()+t.slice(1)).classList.toggle('active', t===name);
-
   });
-
   if(name==='scan'){
-
     setTimeout(function(){ document.getElementById('scanInput').focus(); }, 50);
-
   }
-
   if(name==='log'){
-
     renderLogView(true);
-
+    startOnlinePolling();
+  }else{
+    stopOnlinePolling();
   }
-
 }
-
-
 
 // ── LOADING OVERLAY ────────────────────────────────────────────────
-
 function showLoad(title,sub,pct){
-
   var ov=document.getElementById('loadOverlay');
-
   ov.style.display='flex';
-
   document.getElementById('loadTitle').textContent=title;
-
   document.getElementById('loadSub').textContent=sub||'';
-
   document.getElementById('loadBar').style.width=(pct||0)+'%';
-
 }
-
 function hideLoad(){ document.getElementById('loadOverlay').style.display='none'; }
 
-
-
 // ── AUDIO / NOTIFICATIONS ──────────────────────────────────────────
-
 function toggleSound(){
-
   if(audioReady) return;
-
   unlockAudio();
-
 }
-
 function unlockAudio(){
-
   if(audioReady)return;
-
   try{
-
     audioCtx=new(window.AudioContext||window.webkitAudioContext)();
-
     var b=audioCtx.createBuffer(1,1,22050);
-
     var s=audioCtx.createBufferSource(); s.buffer=b;
-
     s.connect(audioCtx.destination); s.start();
-
     audioReady=true;
-
     var banner=document.getElementById('soundBanner');
-
     banner.classList.add('on');
-
     document.getElementById('soundIcon').textContent='✅';
-
     document.getElementById('soundLabel').textContent='เปิดเสียงแจ้งเตือนแล้ว';
-
     document.getElementById('soundSub').textContent='พร้อมเริ่มสแกน';
-
     document.getElementById('soundSwitch').classList.add('on');
-
     document.getElementById('soundSwitch2').classList.add('on');
-
     if(navigator.vibrate) navigator.vibrate(40);
-
     beep(880,.12); speak('พร้อม');
-
   }catch(e){}
-
 }
-
 function beep(f,d){
-
   if(!audioCtx)return;
-
   try{
-
     var o=audioCtx.createOscillator(), g=audioCtx.createGain();
-
     o.connect(g); g.connect(audioCtx.destination);
-
     o.frequency.value=f; o.type='sine';
-
     var t=audioCtx.currentTime;
-
     g.gain.setValueAtTime(0,t);
-
     g.gain.linearRampToValueAtTime(1.0,t+0.008);
-
     g.gain.exponentialRampToValueAtTime(0.001,t+d);
-
     o.start(t); o.stop(t+d+0.02);
-
   }catch(e){}
-
 }
-
 function playFound(isT){
-
   if(isT){ beep(880,.10); setTimeout(()=>beep(880,.10),130); setTimeout(()=>beep(1400,.30),260); if(navigator.vibrate) navigator.vibrate([120,80,120,80,220]); }
-
   else    { beep(700,.10); setTimeout(()=>beep(950,.20),130); if(navigator.vibrate) navigator.vibrate(60); }
-
 }
-
 function playNone(){ beep(300,.15); setTimeout(()=>beep(200,.25),170); if(navigator.vibrate) navigator.vibrate([40,40,40]); }
-
 function speak(txt){
-
   if(!window.speechSynthesis)return;
-
   try{
-
     speechSynthesis.cancel();
-
     setTimeout(()=>{
-
       var u=new SpeechSynthesisUtterance(txt);
-
       u.lang='th-TH'; u.volume=1; u.rate=1.1; u.pitch=1;
-
       speechSynthesis.speak(u);
-
     },80);
-
   }catch(e){}
-
 }
-
-
 
 // ── PIN ────────────────────────────────────────────────────────────
-
 ['p0','p1','p2','p3'].forEach((id,i)=>{
-
   var el=document.getElementById(id);
-
   el.addEventListener('input',function(){
-
     this.value=this.value.replace(/\D/g,'').slice(-1);
-
     if(this.value&&i<3) document.getElementById('p'+(i+1)).focus();
-
   });
-
   el.addEventListener('keydown',function(e){
-
     if(e.key==='Backspace'&&!this.value&&i>0) document.getElementById('p'+(i-1)).focus();
-
     if(e.key==='Enter') enterRoom();
-
   });
-
 });
-
 function getPin(){ return ['p0','p1','p2','p3'].map(id=>document.getElementById(id).value).join(''); }
-
 function setPin(s){ ['p0','p1','p2','p3'].forEach((id,i)=>{ document.getElementById(id).value=s[i]||''; }); }
-
 function randRoom(){ setPin(String(Math.floor(1000+Math.random()*9000))); }
 
-
-
 // ── ROOM ───────────────────────────────────────────────────────────
-
 function enterRoom(){
-
   var pin=getPin();
-
   if(pin.length<4){ document.getElementById('roomStatus').textContent='❌ ใส่เลข 4 หลักให้ครบ'; return; }
-
   room=pin;
-
   document.getElementById('roomStatus').textContent='✅ เข้าห้อง '+pin+' แล้ว';
-
   document.getElementById('roomLabel').textContent=pin;
-
   document.getElementById('roomTag').textContent='ห้อง '+pin;
-
   document.getElementById('activeRow').style.display='flex';
-
   setConn(true); fetchData();
-
   if(refreshTmr) clearInterval(refreshTmr);
-
   refreshTmr=setInterval(fetchData,60000);
-
   localStorage.setItem('edd_room',pin);
-
   setTab('scan');
-
 }
-
 function leaveRoom(){
-
   room=''; allData=[]; parsedXL=[]; dataReady=false;
-
   if(refreshTmr){ clearInterval(refreshTmr); refreshTmr=null; }
-
   stopCam();
-
   document.getElementById('activeRow').style.display='none';
-
   document.getElementById('roomStatus').textContent='⚠ ยังไม่ได้เชื่อมต่อห้อง';
-
   document.getElementById('roomTag').textContent='ยังไม่เข้าห้อง';
-
   setConn(false); setSS('syncStatus','idle','รอข้อมูล...');
-
   document.getElementById('tbody').innerHTML='';
-
   updateStats();
-
   updateResultZone('wait');
-
 }
-
 function setConn(v){
-
   document.getElementById('dot').className='dot '+(v?'on':'off');
-
   document.getElementById('connTxt').textContent=v?'ออนไลน์':'ออฟไลน์';
-
 }
-
 function setSS(id,t,m){ var el=document.getElementById(id); el.className='sbar '+t; el.textContent=m; }
 
-
-
 // ── ลบข้อมูลเก่า (uploaded_at < วันนี้ 00:00 UTC) ทุก room ────────
-
 async function purgeOldData(){
-
   try{
-
     var todayISO=new Date().toISOString().slice(0,10);
-
     var cutoff=todayISO+'T00:00:00.000Z';
-
     await fetch(
-
       SB_URL+'/rest/v1/'+TBL+'?uploaded_at=lt.'+cutoff,
-
       {method:'DELETE', headers:sbH({'Prefer':'return=minimal'})}
-
     );
-
   }catch(e){ console.warn('[purge]',e); }
-
 }
-
-
 
 // ── ล้างข้อมูลทั้งหมดทุกห้องเวลาเที่ยงคืน (ไม่มีการสำรอง) ─────────
-
 function scheduleMidnightClear(){
-
   var now=new Date();
-
   var midnight=new Date(now.getFullYear(),now.getMonth(),now.getDate()+1,0,0,5,0);
-
   var msUntil=midnight-now;
-
   setTimeout(async function(){
-
     try{
-
       var res=await fetch(
-
         SB_URL+'/rest/v1/'+TBL+'?uploaded_at=not.is.null',
-
         {method:'DELETE', headers:sbH({'Prefer':'return=minimal'})}
-
       );
-
       allData=[]; parsedXL=[]; dataReady=false;
-
       document.getElementById('tbody').innerHTML='';
-
       updateStats();
-
       setSS('syncStatus','warn','⚠ ล้างข้อมูลเที่ยงคืนแล้ว — อัปโหลดใหม่');
-
       setSS('scanStatus','warn','⚠ ข้อมูลถูกล้าง — โปรดอัปโหลดไฟล์ใหม่');
-
       updateResultZone('wait');
-
     }catch(e){}
-
     scheduleMidnightClear();
-
   }, msUntil);
-
 }
 
-
-
 // ── FETCH ─────────────────────────────────────────────────────────
-
 async function fetchData(){
-
   if(!room)return;
-
   dataReady=false;
-
   showLoad('🧹 ล้างข้อมูลเก่า...','',2);
-
   setSS('syncStatus','warn','⏳ กำลังโหลด...');
-
   setSS('scanStatus','warn','⏳ รอโหลดข้อมูลให้ครบก่อน...');
-
-
 
   await purgeOldData();
 
-
-
   try{
-
     var cntRes=await fetch(
-
       SB_URL+'/rest/v1/'+TBL+'?room_id=eq.'+room+'&select=parcel_id&limit=1',
-
       {headers:sbH({'Prefer':'count=exact','Range':'0-0'})}
-
     );
-
     if(!cntRes.ok) throw new Error('count HTTP '+cntRes.status);
-
     var cr=cntRes.headers.get('content-range')||'';
-
     var total=parseInt((cr.match(/\/(\d+)/)||[])[1]||'0');
-
     if(!total){ setSS('syncStatus','warn','⚠ ไม่พบข้อมูล'); hideLoad(); return; }
-
-
 
     showLoad('⏳ พบ '+total+' รายการ กำลังโหลด...','',2);
 
-
-
     var all=[];
-
     var offset=0;
-
     var maxRetry=3;
 
-
-
     while(all.length<total){
-
       var retry=0;
-
       var page=null;
-
       while(retry<maxRetry){
-
         try{
-
           var res=await fetch(
-
             SB_URL+'/rest/v1/'+TBL
-
               +'?room_id=eq.'+room
-
               +'&select=parcel_id,edd'
-
               +'&order=parcel_id'
-
               +'&limit='+PAGE
-
               +'&offset='+offset,
-
             {headers:sbH()}
-
           );
-
           if(!res.ok) throw new Error('HTTP '+res.status);
-
           page=await res.json();
-
           break;
-
         }catch(e){
-
           retry++;
-
           if(retry>=maxRetry) throw e;
-
           await new Promise(r=>setTimeout(r,1000*retry));
-
         }
-
       }
-
       if(!Array.isArray(page)||page.length===0) break;
-
       all=all.concat(page);
-
       offset=all.length;
-
       showLoad('⏳ โหลด '+all.length+'/'+total+' รายการ','',Math.round(all.length/total*100));
-
       if(page.length<PAGE) break;
-
     }
-
-
 
     var seen={};
-
     allData=all.filter(function(r){
-
       var k=normId(r.parcel_id);
-
       if(seen[k]) return false;
-
       seen[k]=true; return true;
-
     });
-
-
 
     dataReady=true;
-
     hideLoad();
-
-
 
     if(allData.length<total){
-
       setSS('syncStatus','warn','⚠ โหลดได้ '+allData.length+'/'+total+' กด 🔄 โหลดใหม่');
-
       setSS('scanStatus','warn','⚠ ข้อมูลไม่ครบ กด 🔄 ในตั้งค่า');
-
     } else {
-
       setSS('syncStatus','ok','✅ '+allData.length+' รายการ · ห้อง '+room);
-
       setSS('scanStatus','ok','✅ พร้อมสแกน — '+allData.length+' พัสดุ');
-
     }
-
     updateResultZone('wait');
-
     renderTable(); setConn(true);
-
   }catch(e){
-
     hideLoad(); dataReady=false;
-
     setSS('syncStatus','err','❌ '+e.message);
-
     setSS('scanStatus','err','❌ โหลดไม่สำเร็จ กด 🔄 ลองใหม่');
-
     setConn(false);
-
   }
-
 }
-
-
 
 // ── EXCEL ──────────────────────────────────────────────────────────
-
 function excelDate(n){
-
   var d=new Date(Date.UTC(1899,11,30)+n*86400000);
-
   return [d.getUTCDate(),d.getUTCMonth()+1,d.getUTCFullYear()].map((v,i)=>i<2?String(v).padStart(2,'0'):v).join('/');
-
 }
-
 function normEdd(raw){
-
   if(!raw&&raw!==0)return '';
-
   var n=Number(raw);
-
   if(!isNaN(n)&&n>40000&&n<60000)return excelDate(n);
-
   var s=String(raw).trim();
-
   var m=s.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/);
-
   if(m)return String(m[3]).padStart(2,'0')+'/'+String(m[2]).padStart(2,'0')+'/'+m[1];
-
   var m2=s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
-
   if(m2)return String(m2[1]).padStart(2,'0')+'/'+String(m2[2]).padStart(2,'0')+'/'+m2[3];
-
   return s;
-
 }
-
 function handleFile(file){
-
   if(!file)return;
-
   setSS('uploadStatus','warn','⏳ อ่านไฟล์...');
-
   var r=new FileReader();
-
   r.onload=function(ev){
-
     try{
-
       var wb=XLSX.read(new Uint8Array(ev.target.result),{type:'array',cellDates:false,cellText:true});
-
       var ws=wb.Sheets[wb.SheetNames[0]];
-
       var json=XLSX.utils.sheet_to_json(ws,{defval:'',raw:false});
-
       var jsonRaw=XLSX.utils.sheet_to_json(ws,{defval:'',raw:true});
-
       var rawCols=json.length>0?Object.keys(json[0]):[];
-
       parsedXL=[];
-
       json.forEach(function(row, idx){
-
         var rowRaw=jsonRaw[idx]||{};
-
         var o={}, oRaw={};
-
         Object.keys(row).forEach(k=>{
-
           var nk=k.toLowerCase().replace(/[\s\-_.]/g,'');
-
           o[nk]=row[k];
-
         });
-
         Object.keys(rowRaw).forEach(k=>{
-
           var nk=k.toLowerCase().replace(/[\s\-_.]/g,'');
-
           oRaw[nk]=rowRaw[k];
-
         });
-
         var pid=String(o.dhlparcelid||o.parcelid||o.parcel||o.parcelno||o.trackingno||o.trackingnumber||o.tracking||o.id||o.shipmentid||o.barcode||'').trim();
-
         var eddRaw=oRaw.eddfinal!==undefined?oRaw.eddfinal:oRaw.edd_final!==undefined?oRaw.edd_final:oRaw.edd!==undefined?oRaw.edd:oRaw.expecteddelivery!==undefined?oRaw.expecteddelivery:oRaw.deliverydate!==undefined?oRaw.deliverydate:oRaw.duedate!==undefined?oRaw.duedate:oRaw.date!==undefined?oRaw.date:'';
-
         if(pid&&pid!=='0') parsedXL.push({parcel_id:pid,edd:normEdd(eddRaw)});
-
       });
-
       if(parsedXL.length>0){
-
         var seen={};
-
         parsedXL=parsedXL.filter(function(r){
-
           var k=String(r.parcel_id).trim();
-
           if(seen[k]) return false;
-
           seen[k]=true; return true;
-
         });
-
         allData=parsedXL.slice(); dataReady=true; renderTable();
-
         setSS('scanStatus','ok','✅ พร้อมสแกน — '+allData.length+' พัสดุ (local)');
-
         setSS('uploadStatus','ok','✅ อ่านได้ '+parsedXL.length+' รายการ · ตย: '+parsedXL[0].parcel_id+' / '+parsedXL[0].edd);
-
         updateResultZone('wait');
-
       } else {
-
         setSS('uploadStatus','err','⚠ ไม่พบ Parcel ID! คอลัมน์: '+rawCols.join(', '));
-
       }
-
     }catch(e){ setSS('uploadStatus','err','❌ '+e.message); }
-
   };
-
   r.readAsArrayBuffer(file);
-
 }
-
-
 
 // ── UPLOAD ─────────────────────────────────────────────────────────
-
 async function clearAndUpload(){
-
   if(!room){ setSS('uploadStatus','err','❌ เข้าห้องก่อน'); return; }
-
   if(!parsedXL.length){ setSS('uploadStatus','err','❌ เลือกไฟล์ก่อน'); return; }
-
   var ts=new Date().toISOString();
-
   var rows=parsedXL.map(r=>({parcel_id:String(r.parcel_id).trim(),edd:String(r.edd).trim(),room_id:room,uploaded_at:ts}));
-
   var total=rows.length;
 
-
-
   showLoad('🗑️ ล้างข้อมูลทั้งหมดในระบบ...','',5);
-
   try{
-
     var d=await fetch(
-
       SB_URL+'/rest/v1/'+TBL+'?uploaded_at=not.is.null',
-
       {method:'DELETE', headers:sbH({'Prefer':'return=minimal'})}
-
     );
-
     if(![200,204,404].includes(d.status)){
-
       var d2=await fetch(
-
         SB_URL+'/rest/v1/'+TBL+'?room_id=eq.'+room,
-
         {method:'DELETE', headers:sbH({'Prefer':'return=minimal'})}
-
       );
-
       if(![200,204,404].includes(d2.status)){
-
         hideLoad(); setSS('uploadStatus','err','❌ ลบไม่ได้ ('+d2.status+')'); return;
-
       }
-
     }
-
   }catch(e){ hideLoad(); setSS('uploadStatus','err','❌ '+e.message); return; }
 
-
-
   var batches=[]; var done=0;
-
   for(var i=0;i<rows.length;i+=BATCH) batches.push(rows.slice(i,i+BATCH));
 
-
-
   async function uploadBatch(chunk){
-
     var r=await fetch(SB_URL+'/rest/v1/'+TBL,{method:'POST',headers:sbH({'Prefer':'resolution=ignore-duplicates,return=minimal'}),body:JSON.stringify(chunk)});
-
     if(![200,201,204].includes(r.status)) throw new Error('batch error '+r.status+': '+(await r.text()));
-
     done+=chunk.length;
-
     var pct=Math.round(done/total*100);
-
     showLoad('⬆️ อัปโหลด '+done+'/'+total+' รายการ','',pct);
-
   }
-
-
 
   showLoad('⬆️ เริ่มอัปโหลด '+total+' รายการ','',10);
-
   try{
-
     for(var j=0;j<batches.length;j+=UPLOAD_CON){
-
       await Promise.all(batches.slice(j,j+UPLOAD_CON).map(uploadBatch));
-
     }
-
     hideLoad();
-
     setSS('uploadStatus','ok','✅ อัปโหลดสำเร็จ '+total+' รายการ');
-
     speak('อัปโหลดสำเร็จ '+total+' รายการ');
-
     fetchData();
-
   }catch(e){ hideLoad(); setSS('uploadStatus','err','❌ '+e.message); }
-
 }
-
-
 
 // ── SCAN (gun) ─────────────────────────────────────────────────────
-
 document.getElementById('scanInput').addEventListener('keydown',function(e){
-
   if(e.key==='Enter'){
-
     var c=this.value.trim();
-
     if(c){
-
       if(!dataReady){ setSS('scanStatus','warn','⏳ ข้อมูลยังโหลดไม่ครบ กรุณารอ...'); this.value=''; return; }
-
       searchParcel(c); this.value='';
-
     }
-
   }
-
 });
-
-
 
 function normId(s){
-
   return String(s||'')
-
     .trim()
-
     .replace(/[\s\-_]/g,'')
-
     .replace(/[^\x00-\x7F]/g,function(c){
-
       var code=c.charCodeAt(0);
-
       if(code>=0xFF10&&code<=0xFF19) return String(code-0xFF10);
-
       return c;
-
     })
-
     .toUpperCase();
-
 }
-
-
 
 function updateResultZone(state,parcel,edd){
-
   var zone=document.getElementById('resultZone');
-
   var icon=document.getElementById('rzIcon');
-
   var pEl=document.getElementById('rParcel');
-
   var eEl=document.getElementById('rEdd');
-
   var flag=document.getElementById('todayFlag');
-
   zone.className='result-zone st-'+state;
-
   flag.style.display='none';
-
   if(state==='wait'){
-
     icon.textContent='🔍'; pEl.textContent='พร้อมสแกน'; eEl.textContent='เล็งบาร์โค้ดในกรอบ หรือใช้ปืนยิง';
-
   } else if(state==='found'){
-
     icon.textContent='📦'; pEl.textContent=parcel; eEl.textContent='EDD: '+(edd||'—');
-
   } else if(state==='today'){
-
     icon.textContent='🚨'; pEl.textContent=parcel; eEl.textContent='EDD: '+(edd||'—');
-
     flag.style.display='inline-block';
-
   } else if(state==='none'){
-
     icon.textContent='❌'; pEl.textContent=parcel; eEl.textContent='ไม่พบในระบบ';
-
   }
-
 }
-
-
 
 function searchParcel(code){
-
   if(!code) return;
-
   if(!dataReady){
-
     setSS('scanStatus','warn','⏳ ข้อมูลยังโหลดไม่ครบ กรุณารอ...'); return;
-
   }
-
   var normCode=normId(code);
-
   var tod=today(), found=null;
-
   for(var i=0;i<allData.length;i++){
-
     if(normId(allData[i].parcel_id)===normCode){ found=allData[i]; break; }
-
   }
-
   document.querySelectorAll('.trow-found').forEach(r=>r.classList.remove('trow-found'));
-
   if(found){
-
     var isT=String(found.edd).trim()===tod;
-
     var dayNum=String(found.edd||'').split('/')[0];
-
     updateResultZone(isT?'today':'found', found.parcel_id, found.edd);
-
     setSS('scanStatus','ok',isT?'🚨 EDD วันนี้! นำออกส่งด่วน':'✅ พบพัสดุ — EDD: '+found.edd);
-
     playFound(isT);
-
     if(isT){ speak('EDD วันนี้ นำออก'); }
-
     else    { speak('วันที่ '+dayNum); }
-
     document.querySelectorAll('#tbody tr').forEach(r=>{ if(normId(r.dataset.pid)===normCode) r.classList.add('trow-found'); });
-
   }else{
-
     updateResultZone('none', code);
-
     setSS('scanStatus','err','❌ ไม่พบ: '+code);
-
     playNone(); speak('ไม่พบ');
-
   }
-
 }
-
-
 
 // ── CAMERA ─────────────────────────────────────────────────────────
-
 async function toggleCam(){
-
   if(camOn){ stopCam(); return; }
-
   try{
-
     var st=await navigator.mediaDevices.getUserMedia({
-
       video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}}
-
     });
-
     var vid=document.getElementById('camVideo');
-
     vid.srcObject=st; camStream=st; await vid.play();
-
     document.getElementById('camWrap').style.display='block';
-
     var btn=document.getElementById('camBtn');
-
     btn.textContent='⏹ ปิดกล้อง'; btn.classList.add('on');
-
     camOn=true; lockedCode=''; startDetect(vid);
-
   }catch(e){ setSS('scanStatus','err','❌ กล้องไม่ได้: '+e.message); }
-
 }
-
 function stopCam(){
-
   if(camStream){ camStream.getTracks().forEach(t=>t.stop()); camStream=null; }
-
   document.getElementById('camWrap').style.display='none';
-
   var btn=document.getElementById('camBtn');
-
   btn.textContent='📷 เปิดกล้องสแกน'; btn.classList.remove('on');
-
   camOn=false; lockedCode='';
-
   var el=document.getElementById('camLock'); el.style.display='none';
-
 }
-
 function setLockLabel(txt){
-
   var el=document.getElementById('camLock');
-
   if(txt){ el.textContent='🔒 '+txt; el.style.display='block'; }
-
   else    { el.style.display='none'; }
-
 }
-
-
 
 function startDetect(vid){
-
   var CONFIRM_NEEDED = 4;
-
   var COOLDOWN_MS    = 2500;
-
   var pendingCode  = '';
-
   var pendingCount = 0;
-
   var lastFiredAt  = 0;
 
-
-
   function onCode(b){
-
     if(!b||!camOn) return;
-
     var now=Date.now();
-
     if(now - lastFiredAt < COOLDOWN_MS) return;
-
     if(b === pendingCode){
-
       pendingCount++;
-
     } else {
-
       pendingCode  = b;
-
       pendingCount = 1;
-
     }
-
     setLockLabel(b + ' (' + pendingCount + '/' + CONFIRM_NEEDED + ')');
-
     if(pendingCount >= CONFIRM_NEEDED){
-
       lastFiredAt  = now;
-
       lockedCode   = b;
-
       pendingCode  = '';
-
       pendingCount = 0;
-
       setLockLabel(b);
-
       searchParcel(b);
-
     }
-
   }
-
-
 
   if('BarcodeDetector' in window){
-
     var det=new BarcodeDetector({formats:[
-
       'code_128','code_39','code_93','ean_13','ean_8','upc_a','upc_e',
-
       'itf','codabar','qr_code','pdf417','data_matrix','aztec'
-
     ]});
-
     (function loop(){
-
       if(!camOn)return;
-
       det.detect(vid).then(codes=>{
-
         if(codes.length) onCode(codes[0].rawValue.trim());
-
         else { pendingCode=''; pendingCount=0; }
-
       }).catch(()=>{});
-
       setTimeout(loop, 80);
-
     })();
-
   }else{
-
-    var s=document.createElement('script');
-
-    s.src='https://unpkg.com/@zxing/library@latest/umd/index.min.js';
-
-    s.onload=function(){
-
+    loadZXing(function(ok){
+      if(!ok){
+        setSS('scanStatus','err','❌ โหลดตัวอ่านบาร์โค้ดไม่สำเร็จ (เช็คอินเทอร์เน็ต หรือลองเปิดใน Safari/Chrome แทนเบราว์เซอร์ในแอปอื่น เช่น LINE)');
+        return;
+      }
       try{
-
         new ZXing.BrowserMultiFormatReader().decodeFromVideoElement(vid,function(res){
-
           if(res) onCode(res.getText().trim());
-
           else { pendingCode=''; pendingCount=0; }
-
         });
-
-      }catch(e){}
-
-    };
-
-    document.head.appendChild(s);
-
+      }catch(e){
+        setSS('scanStatus','err','❌ ตัวอ่านบาร์โค้ดทำงานผิดพลาด: '+e.message);
+      }
+    });
   }
-
 }
 
-
+// โหลดไลบรารี ZXing สำหรับอ่านบาร์โค้ด/QR บน iOS Safari (ไม่มี BarcodeDetector ในตัว)
+// ลองหลาย CDN เผื่อบางแหล่งโหลดไม่ได้ (เช่น ถูกบล็อกใน in-app browser บางตัว)
+var _zxingLoading=null;
+function loadZXing(cb){
+  if(window.ZXing){ cb(true); return; }
+  if(_zxingLoading){ _zxingLoading.push(cb); return; }
+  _zxingLoading=[cb];
+  var urls=[
+    'https://unpkg.com/@zxing/library@0.21.3/umd/index.min.js',
+    'https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js'
+  ];
+  var i=0;
+  function tryNext(){
+    if(i>=urls.length){
+      var cbs=_zxingLoading; _zxingLoading=null;
+      cbs.forEach(function(f){ f(false); });
+      return;
+    }
+    var s=document.createElement('script');
+    s.src=urls[i++];
+    s.onload=function(){
+      var cbs=_zxingLoading; _zxingLoading=null;
+      cbs.forEach(function(f){ f(!!window.ZXing); });
+    };
+    s.onerror=function(){ tryNext(); };
+    document.head.appendChild(s);
+  }
+  tryNext();
+}
 
 // ── TABLE ──────────────────────────────────────────────────────────
-
 var tblFiltered=[];
-
 var tblShown=0;
-
 var TBL_CHUNK=100;
 
-
-
 function updateStats(){
-
   var tod=today();
-
   var todayCnt=allData.filter(r=>String(r.edd).trim()===tod).length;
-
   document.getElementById('statToday').textContent=todayCnt;
-
   document.getElementById('statTotal').textContent=allData.length;
-
   var badge=document.getElementById('listBadge');
-
   badge.style.display=todayCnt>0?'block':'none';
-
 }
-
-
 
 function renderTable(){
-
   var q=(document.getElementById('srch').value||'').toLowerCase();
-
   var tod=today();
-
   var filtered=allData.filter(r=>!q||String(r.parcel_id).toLowerCase().includes(q)||String(r.edd).toLowerCase().includes(q));
-
   var todayRows=filtered.filter(r=>String(r.edd).trim()===tod);
-
   var otherRows=filtered.filter(r=>String(r.edd).trim()!==tod);
-
   tblFiltered=todayRows.concat(otherRows);
-
   tblShown=0;
-
   updateStats();
-
   document.getElementById('tbody').innerHTML='';
-
   appendRows();
-
 }
-
-
 
 function appendRows(){
-
   var tod=today();
-
   var end=Math.min(tblShown+TBL_CHUNK, tblFiltered.length);
-
   var html='';
-
   for(var i=tblShown;i<end;i++){
-
     var r=tblFiltered[i]; var isT=String(r.edd).trim()===tod;
-
     html+='<tr class="'+(isT?'trow-today':'')+'" data-pid="'+r.parcel_id
-
       +'" onclick="rowPick(\''+String(r.parcel_id).replace(/'/g,"\\'")+'\')">'
-
       +'<td style="word-break:break-all;font-size:10px">'+r.parcel_id+'</td>'
-
       +'<td style="white-space:nowrap">'+r.edd+'</td>'
-
       +'<td>'+(isT?'<span class="chip chip-today">🚚 วันนี้</span>':'<span class="chip chip-ok">📅</span>')+'</td></tr>';
-
   }
-
   document.getElementById('tbody').insertAdjacentHTML('beforeend',html);
-
   tblShown=end;
-
 }
-
-
 
 document.getElementById('tblWrap').addEventListener('scroll',function(){
-
   if(tblShown>=tblFiltered.length) return;
-
   var el=this;
-
   if(el.scrollTop+el.clientHeight>=el.scrollHeight-40){
-
     appendRows();
-
   }
-
 });
-
 function rowPick(pid){
-
   setTab('scan');
-
   document.getElementById('scanInput').value='';
-
   searchParcel(pid);
-
 }
-
-
 
 // ── UTILS ──────────────────────────────────────────────────────────
-
 function today(){
-
   var t=new Date();
-
   return String(t.getDate()).padStart(2,'0')+'/'+String(t.getMonth()+1).padStart(2,'0')+'/'+t.getFullYear();
-
 }
-
-
 
 // ── LOGIN GATE ─────────────────────────────────────────────────────
-
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
 
-
-
 function initLoginGate(){
-
   try{
-
     var saved=sessionStorage.getItem('edd_user');
-
     if(saved){
-
       currentUser=JSON.parse(saved);
-
       hideLoginGate();
-
+      startHeartbeat();
       return;
-
     }
-
   }catch(e){}
-
   document.getElementById('loginGate').style.display='flex';
-
   setTimeout(function(){ document.getElementById('lgLocation').focus(); },100);
-
 }
-
-
 
 function hideLoginGate(){
-
   document.getElementById('loginGate').style.display='none';
-
   if(currentUser){
-
     document.getElementById('userTag').style.display='flex';
-
     document.getElementById('userTagTxt').textContent=currentUser.name+' · '+currentUser.location;
-
     var st=document.getElementById('settingsUserTxt');
-
     if(st) st.textContent='👤 '+currentUser.name+'  ·  📍 '+currentUser.location;
-
   }
-
 }
-
-
 
 function logoutUser(){
-
   try{ sessionStorage.removeItem('edd_user'); }catch(e){}
-
   currentUser=null;
-
+  stopHeartbeat();
   document.getElementById('userTag').style.display='none';
-
   var st=document.getElementById('settingsUserTxt');
-
   if(st) st.textContent='—';
-
   document.getElementById('lgLocation').value='';
-
   document.getElementById('lgName').value='';
-
   document.getElementById('lgErr').textContent='';
-
   document.getElementById('loginGate').style.display='flex';
-
   setTimeout(function(){ document.getElementById('lgLocation').focus(); },100);
-
 }
-
-
 
 function submitLogin(){
-
   var loc=document.getElementById('lgLocation').value.trim();
-
   var name=document.getElementById('lgName').value.trim();
-
   var err=document.getElementById('lgErr');
-
   if(!loc||!name){ err.textContent='❌ กรุณากรอกให้ครบทั้งพื้นที่และชื่อผู้เข้าใช้'; return; }
-
   err.textContent='';
-
   currentUser={name:name, location:loc};
-
   try{ sessionStorage.setItem('edd_user', JSON.stringify(currentUser)); }catch(e){}
-
   hideLoginGate();
-
   logAccess(currentUser);
-
+  startHeartbeat();
 }
 
-
-
 // บันทึกการเข้าใช้งาน: เก็บไว้ในเครื่อง (เสมอ) + พยายามซิงค์ขึ้นคลาวด์ (ถ้ามีตาราง edd_access_log)
-
 function logAccess(u){
-
   var ts=new Date().toISOString();
-
   var entry={name:u.name, location:u.location, room_id:room||'', logged_at:ts};
-
   try{
-
     var hist=JSON.parse(localStorage.getItem('edd_access_log')||'[]');
-
     hist.unshift(entry);
-
     if(hist.length>300) hist=hist.slice(0,300);
-
     localStorage.setItem('edd_access_log', JSON.stringify(hist));
-
   }catch(e){}
-
   fetch(SB_URL+'/rest/v1/'+TBL_LOG,{method:'POST',headers:sbH({'Prefer':'return=minimal'}),body:JSON.stringify([entry])})
     .then(function(r){ if(!r.ok){ r.text().then(function(t){ console.warn('[edd_access_log] insert failed', r.status, t); }); } })
     .catch(function(e){ console.warn('[edd_access_log] insert error', e); });
-
 }
 
+// ── PRESENCE (ผู้ใช้งานออนไลน์แบบเรียลไทม์) ──────────────────────────
+// อัปเดตทุก 30 วิ ว่ายัง "อยู่" ในระบบ (ต้องมีตาราง edd_presence — ดูคำแนะนำ SQL)
+var HEARTBEAT_MS = 30000;
+var ONLINE_WINDOW_MIN = 2; // ถือว่า "ออนไลน์" ถ้าพบสัญญาณภายใน 2 นาทีล่าสุด
+var _hbTmr=null, _onlineTmr=null;
 
+function userKey(u){ return (u.name+'|'+u.location).trim().toLowerCase(); }
+
+function sendHeartbeat(){
+  if(!currentUser) return;
+  var entry={user_key:userKey(currentUser), name:currentUser.name, location:currentUser.location, room_id:room||'', last_seen:new Date().toISOString()};
+  fetch(SB_URL+'/rest/v1/'+TBL_PRESENCE+'?on_conflict=user_key',{
+    method:'POST',
+    headers: sbH({'Prefer':'resolution=merge-duplicates,return=minimal'}),
+    body: JSON.stringify([entry])
+  }).catch(function(){});
+}
+
+function startHeartbeat(){
+  sendHeartbeat();
+  if(_hbTmr) clearInterval(_hbTmr);
+  _hbTmr=setInterval(sendHeartbeat, HEARTBEAT_MS);
+}
+function stopHeartbeat(){
+  if(_hbTmr){ clearInterval(_hbTmr); _hbTmr=null; }
+}
+
+async function refreshOnlineCount(){
+  var pill=document.getElementById('onlinePill');
+  var cntEl=document.getElementById('onlineCount');
+  var namesEl=document.getElementById('onlineNames');
+  if(!pill) return;
+  try{
+    var cutoff=new Date(Date.now()-ONLINE_WINDOW_MIN*60000).toISOString();
+    var res=await fetch(SB_URL+'/rest/v1/'+TBL_PRESENCE+'?select=name,location,last_seen&last_seen=gte.'+encodeURIComponent(cutoff)+'&order=last_seen.desc',{headers:sbH()});
+    if(!res.ok){ throw new Error('http '+res.status); }
+    var rows=await res.json();
+    cntEl.textContent=rows.length;
+    namesEl.textContent=rows.length? ('('+rows.map(function(r){return r.name;}).join(', ')+')') : '';
+    pill.style.display='flex';
+  }catch(e){
+    pill.style.display='none'; // ยังไม่มีตาราง edd_presence หรือเชื่อมต่อไม่ได้ — ซ่อนไว้เงียบๆ
+  }
+}
+function startOnlinePolling(){
+  refreshOnlineCount();
+  if(_onlineTmr) clearInterval(_onlineTmr);
+  _onlineTmr=setInterval(refreshOnlineCount, 15000);
+}
+function stopOnlinePolling(){
+  if(_onlineTmr){ clearInterval(_onlineTmr); _onlineTmr=null; }
+}
+
+// จัดกลุ่มรายการล็อกอินตามผู้ใช้ (ชื่อ+พื้นที่) ไม่แสดงชื่อซ้ำ พร้อมนับจำนวนครั้งและระยะเวลา
+function groupLogEntries(entries){
+  var map={}; // key -> {name, location, room_id, count, first, last}
+  entries.forEach(function(e){
+    var key=(e.name+'|'+e.location).trim().toLowerCase();
+    var t=new Date(e.logged_at).getTime();
+    if(isNaN(t)) return;
+    if(!map[key]){
+      map[key]={name:e.name, location:e.location, room_id:e.room_id||'', count:0, first:t, last:t};
+    }
+    var g=map[key];
+    g.count++;
+    if(t<g.first) g.first=t;
+    if(t>g.last) g.last=t;
+    if(!g.room_id && e.room_id) g.room_id=e.room_id;
+  });
+  return Object.values(map).sort(function(a,b){ return b.last-a.last; });
+}
+
+function fmtDuration(ms){
+  if(ms<=0) return null;
+  var mins=Math.round(ms/60000);
+  var h=Math.floor(mins/60), m=mins%60;
+  if(h<=0) return m+' นาที';
+  return h+' ชม '+m+' นาที';
+}
 
 // แสดง Log ผู้เข้าใช้งาน: ลองดึงจากคลาวด์ก่อน ถ้าไม่สำเร็จ (ยังไม่มีตาราง/ออฟไลน์) ใช้ข้อมูลในเครื่องแทน
-
 async function renderLogView(){
-
   var list=document.getElementById('logList');
-
   if(!list) return;
-
   var local=[];
-
   try{ local=JSON.parse(localStorage.getItem('edd_access_log')||'[]'); }catch(e){}
 
-
-
   var entries=local, statusType='warn', statusMsg='📱 แสดงจากเครื่องนี้เท่านั้น (เชื่อมต่อคลาวด์ไม่สำเร็จ)';
-
   try{
-
-    var res=await fetch(SB_URL+'/rest/v1/'+TBL_LOG+'?select=name,location,room_id,logged_at&order=logged_at.desc&limit=100',{headers:sbH()});
-
+    var res=await fetch(SB_URL+'/rest/v1/'+TBL_LOG+'?select=name,location,room_id,logged_at&order=logged_at.desc&limit=300',{headers:sbH()});
     if(res.ok){
-
       var cloud=await res.json();
-
       if(Array.isArray(cloud)&&cloud.length){
-
         entries=cloud;
-
         statusType='ok';
-
         statusMsg='☁️ ซิงค์จากคลาวด์ · '+entries.length+' รายการล่าสุด';
-
       }else{
-
-        // เชื่อมต่อคลาวด์ได้ แต่ยังไม่มีข้อมูล (เช่น เพิ่งสร้างตาราง ยังไม่มีใครล็อกอินใหม่)
-
         statusType='warn';
-
         statusMsg='☁️ เชื่อมต่อคลาวด์สำเร็จ แต่ยังไม่มีข้อมูลบนคลาวด์ — แสดงประวัติเครื่องนี้แทน (ลองออกจากระบบแล้วล็อกอินใหม่เพื่อทดสอบส่งข้อมูล)';
-
       }
-
     }else{
-
       statusType='err';
-
       statusMsg='❌ เชื่อมต่อคลาวด์ไม่สำเร็จ (HTTP '+res.status+') — แสดงประวัติเครื่องนี้แทน';
-
     }
-
   }catch(e){
-
     statusType='err';
-
     statusMsg='❌ เชื่อมต่อคลาวด์ไม่สำเร็จ — แสดงประวัติเครื่องนี้แทน';
-
   }
-
-
 
   setSS('logSyncStatus', statusType, statusMsg);
 
-
-
-  if(!entries.length){
-
+  var groups=groupLogEntries(entries);
+  if(!groups.length){
     list.innerHTML='<div class="log-empty">ยังไม่มีประวัติผู้เข้าใช้งาน</div>';
-
     return;
-
   }
-
   var html='';
-
-  entries.forEach(function(e){
-
-    var d=new Date(e.logged_at);
-
-    var timeStr=isNaN(d.getTime())?String(e.logged_at):d.toLocaleString('th-TH',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
-
-    html+='<div class="log-card"><div class="log-name">👤 '+esc(e.name)+'</div><div class="log-loc">📍 '+esc(e.location)+(e.room_id?' · ห้อง '+esc(e.room_id):'')+'</div><div class="log-time">🕒 '+timeStr+'</div></div>';
-
+  groups.forEach(function(g){
+    var lastStr=new Date(g.last).toLocaleString('th-TH',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+    var dur=fmtDuration(g.last-g.first);
+    var meta='เข้าใช้งาน '+g.count+' ครั้ง'+(dur?(' · ใช้งานมาแล้ว '+dur):'');
+    html+='<div class="log-card">'
+        +'<div class="log-name">👤 '+esc(g.name)+'</div>'
+        +'<div class="log-loc">📍 '+esc(g.location)+(g.room_id?' · ห้อง '+esc(g.room_id):'')+'</div>'
+        +'<div class="log-meta">'+meta+'</div>'
+        +'<div class="log-time">🕒 ล่าสุด '+lastStr+'</div>'
+        +'</div>';
   });
-
   list.innerHTML=html;
-
 }
 
-
-
 // ── INIT ───────────────────────────────────────────────────────────
-
 (function(){
-
   var lr=localStorage.getItem('edd_room');
-
   if(lr) setPin(lr);
-
   scheduleMidnightClear();
-
   initLoginGate();
-
+  if(!('BarcodeDetector' in window)) loadZXing(function(){});
 })();
-
 </script>
-
 </body>
-
 </html>
