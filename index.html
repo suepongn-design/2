@@ -829,7 +829,9 @@ function manualCapture(){
 }
 
 function startDetect(vid){
-  var CONFIRM_NEEDED = 4;
+  // จำกัดชนิดบาร์โค้ดเฉพาะที่ใช้จริงกับพัสดุ (QR + บาร์โค้ดเส้นที่พบบ่อย)
+  // เพื่อลดโอกาสอ่านสลับไปโดนบาร์โค้ด/ตัวเลขอื่นบนป้าย (เช่น Order No.) โดยเฉพาะบน iPhone ที่ภาพมักไม่คมเท่า
+  var CONFIRM_NEEDED = 2;
   var COOLDOWN_MS    = 2500;
   var pendingCode  = '';
   var pendingCount = 0;
@@ -857,10 +859,7 @@ function startDetect(vid){
   }
 
   if('BarcodeDetector' in window){
-    var det=new BarcodeDetector({formats:[
-      'code_128','code_39','code_93','ean_13','ean_8','upc_a','upc_e',
-      'itf','codabar','qr_code','pdf417','data_matrix','aztec'
-    ]});
+    var det=new BarcodeDetector({formats:['qr_code','code_128','code_39','ean_13','itf']});
     (function loop(){
       if(!camOn)return;
       det.detect(vid).then(codes=>{
@@ -886,8 +885,16 @@ function startDetect(vid){
         setSS('scanStatus','err','❌ โหลดตัวอ่านบาร์โค้ดไม่สำเร็จ (เช็คอินเทอร์เน็ต หรือลองเปิดใน Safari/Chrome แทนเบราว์เซอร์ในแอปอื่น เช่น LINE)');
         return;
       }
+      var hints=new Map();
+      hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS,[
+        ZXing.BarcodeFormat.QR_CODE,
+        ZXing.BarcodeFormat.CODE_128,
+        ZXing.BarcodeFormat.CODE_39,
+        ZXing.BarcodeFormat.EAN_13,
+        ZXing.BarcodeFormat.ITF
+      ]);
       try{
-        new ZXing.BrowserMultiFormatReader().decodeFromVideoElement(vid,function(res){
+        new ZXing.BrowserMultiFormatReader(hints).decodeFromVideoElement(vid,function(res){
           if(res) onCode(res.getText().trim());
           else { pendingCode=''; pendingCount=0; }
         });
@@ -903,7 +910,7 @@ function startDetect(vid){
         canvas.width=vid.videoWidth||1280; canvas.height=vid.videoHeight||720;
         canvas.getContext('2d').drawImage(vid,0,0,canvas.width,canvas.height);
         var dataUrl=canvas.toDataURL('image/png');
-        new ZXing.BrowserMultiFormatReader().decodeFromImage(undefined, dataUrl).then(function(res){
+        new ZXing.BrowserMultiFormatReader(hints).decodeFromImage(undefined, dataUrl).then(function(res){
           if(res) onCode(res.getText().trim());
         }).catch(function(){
           setSS('scanStatus','err','❌ ไม่พบบาร์โค้ดในภาพ — ลองเข้าใกล้ขึ้น/เพิ่มแสง แล้วถ่ายใหม่');
