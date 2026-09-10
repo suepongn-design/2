@@ -398,7 +398,15 @@ function unlockAudio(){
     var b=audioCtx.createBuffer(1,1,22050);
     var s=audioCtx.createBufferSource(); s.buffer=b;
     s.connect(audioCtx.destination); s.start();
+    if(audioCtx.state==='suspended') audioCtx.resume().catch(function(){});
     audioReady=true;
+    // เผื่อไว้: iOS Safari บางครั้งพักเสียง (suspend) เองระหว่างใช้งานยาว ๆ
+    // เช่น ตอนสลับแอป/พับจอ — คอยเช็คแล้วปลุกกลับให้อัตโนมัติทุก 5 วิ
+    setInterval(function(){
+      if(audioCtx && audioCtx.state==='suspended') audioCtx.resume().catch(function(){});
+    },5000);
+    // จุดชนวน speechSynthesis (เสียงพูด) ไว้ล่วงหน้า — iOS Safari ต้องปลุกครั้งแรกในจังหวะแตะหน้าจอเช่นกัน
+    if(window.speechSynthesis) speechSynthesis.getVoices();
     var banner=document.getElementById('soundBanner');
     banner.classList.add('on');
     document.getElementById('soundIcon').textContent='✅';
@@ -412,6 +420,7 @@ function unlockAudio(){
 }
 function beep(f,d){
   if(!audioCtx)return;
+  if(audioCtx.state==='suspended') audioCtx.resume().catch(function(){});
   try{
     var o=audioCtx.createOscillator(), g=audioCtx.createGain();
     o.connect(g); g.connect(audioCtx.destination);
@@ -831,31 +840,20 @@ function manualCapture(){
 function startDetect(vid){
   // จำกัดชนิดบาร์โค้ดเฉพาะที่ใช้จริงกับพัสดุ (QR + บาร์โค้ดเส้นที่พบบ่อย)
   // เพื่อลดโอกาสอ่านสลับไปโดนบาร์โค้ด/ตัวเลขอื่นบนป้าย (เช่น Order No.) โดยเฉพาะบน iPhone ที่ภาพมักไม่คมเท่า
-  var CONFIRM_NEEDED = 2;
-  var COOLDOWN_MS    = 2500;
-  var pendingCode  = '';
-  var pendingCount = 0;
-  var lastFiredAt  = 0;
+  // อ่านถูกครั้งเดียวก็ยิงผลลัพธ์ทันที (ไม่ต้องรอยืนยันซ้ำ) เพราะทุกฟอร์แมตที่ใช้มี checksum ในตัวอยู่แล้ว
+  // (บนกล้อง iPhone แต่ละเฟรมไม่นิ่งพอจะอ่านซ้ำติดกันได้หลายครั้ง การรอยืนยันซ้ำเลยทำให้ค้างไม่ยิงผลสักที)
+  var COOLDOWN_MS = 2500;
+  var lastCode = '';
+  var lastFiredAt = 0;
 
   function onCode(b){
     if(!b||!camOn) return;
     var now=Date.now();
-    if(now - lastFiredAt < COOLDOWN_MS) return;
-    if(b === pendingCode){
-      pendingCount++;
-    } else {
-      pendingCode  = b;
-      pendingCount = 1;
-    }
-    setLockLabel(b + ' (' + pendingCount + '/' + CONFIRM_NEEDED + ')');
-    if(pendingCount >= CONFIRM_NEEDED){
-      lastFiredAt  = now;
-      lockedCode   = b;
-      pendingCode  = '';
-      pendingCount = 0;
-      setLockLabel(b);
-      searchParcel(b);
-    }
+    if(b===lastCode && (now-lastFiredAt)<COOLDOWN_MS) return; // กันยิงซ้ำรัว ๆ จากโค้ดเดิม
+    lastCode=b; lastFiredAt=now;
+    lockedCode=b;
+    setLockLabel(b);
+    searchParcel(b);
   }
 
   if('BarcodeDetector' in window){
@@ -864,7 +862,6 @@ function startDetect(vid){
       if(!camOn)return;
       det.detect(vid).then(codes=>{
         if(codes.length) onCode(codes[0].rawValue.trim());
-        else { pendingCode=''; pendingCount=0; }
       }).catch(()=>{});
       setTimeout(loop, 80);
     })();
@@ -896,7 +893,6 @@ function startDetect(vid){
       try{
         new ZXing.BrowserMultiFormatReader(hints).decodeFromVideoElement(vid,function(res){
           if(res) onCode(res.getText().trim());
-          else { pendingCode=''; pendingCount=0; }
         });
       }catch(e){
         setSS('scanStatus','err','❌ ตัวอ่านบาร์โค้ดทำงานผิดพลาด: '+e.message);
