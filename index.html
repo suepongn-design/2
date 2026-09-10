@@ -236,6 +236,7 @@ tr.trow-found td{background:#fff3b0;font-weight:700}
     <div class="cam-guide"></div>
     <div class="cam-lock" id="camLock"></div>
   </div>
+  <button class="btn-yellow" id="captureBtn" style="display:none;background:#fff;border:2px solid var(--y)" onclick="manualCapture()">📸 ถ่ายภาพแล้วลองอ่าน (สำหรับ iPhone ที่อ่านไม่ติด)</button>
   <div id="scanStatus" class="sbar idle">💡 เข้าห้องทำงานและโหลดไฟล์ Excel ก่อน (ไปที่ตั้งค่า)</div>
 </div>
 
@@ -350,6 +351,7 @@ var room='', allData=[], parsedXL=[];
 var dataReady=false;
 var refreshTmr=null, audioCtx=null, audioReady=false;
 var camStream=null, camOn=false, lockedCode='';
+var _manualCapture=null;
 
 // ── HEADERS ────────────────────────────────────────────────────────
 function sbH(ex){
@@ -789,11 +791,19 @@ async function toggleCam(){
   if(camOn){ stopCam(); return; }
   try{
     var st=await navigator.mediaDevices.getUserMedia({
-      video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}}
+      video:{facingMode:{ideal:'environment'},width:{ideal:1920},height:{ideal:1080}}
     });
     var vid=document.getElementById('camVideo');
     vid.srcObject=st; camStream=st; await vid.play();
+    // ลองขอให้กล้องโฟกัสต่อเนื่อง (บางเบราว์เซอร์/อุปกรณ์รองรับ ถ้าไม่รองรับจะไม่มีผลอะไร ไม่ error)
+    try{
+      var track=st.getVideoTracks()[0];
+      if(track && track.applyConstraints){
+        track.applyConstraints({advanced:[{focusMode:'continuous'}]}).catch(function(){});
+      }
+    }catch(e){}
     document.getElementById('camWrap').style.display='block';
+    document.getElementById('captureBtn').style.display='block';
     var btn=document.getElementById('camBtn');
     btn.textContent='⏹ ปิดกล้อง'; btn.classList.add('on');
     camOn=true; lockedCode=''; startDetect(vid);
@@ -802,15 +812,20 @@ async function toggleCam(){
 function stopCam(){
   if(camStream){ camStream.getTracks().forEach(t=>t.stop()); camStream=null; }
   document.getElementById('camWrap').style.display='none';
+  document.getElementById('captureBtn').style.display='none';
   var btn=document.getElementById('camBtn');
   btn.textContent='📷 เปิดกล้องสแกน'; btn.classList.remove('on');
   camOn=false; lockedCode='';
+  _manualCapture=null;
   var el=document.getElementById('camLock'); el.style.display='none';
 }
 function setLockLabel(txt){
   var el=document.getElementById('camLock');
   if(txt){ el.textContent='🔒 '+txt; el.style.display='block'; }
   else    { el.style.display='none'; }
+}
+function manualCapture(){
+  if(_manualCapture) _manualCapture();
 }
 
 function startDetect(vid){
@@ -854,6 +869,17 @@ function startDetect(vid){
       }).catch(()=>{});
       setTimeout(loop, 80);
     })();
+    _manualCapture=function(){
+      if(!camOn) return;
+      setSS('scanStatus','idle','🔍 กำลังวิเคราะห์ภาพนิ่ง...');
+      var canvas=document.createElement('canvas');
+      canvas.width=vid.videoWidth||1280; canvas.height=vid.videoHeight||720;
+      canvas.getContext('2d').drawImage(vid,0,0,canvas.width,canvas.height);
+      det.detect(canvas).then(function(codes){
+        if(codes.length) onCode(codes[0].rawValue.trim());
+        else setSS('scanStatus','err','❌ ไม่พบบาร์โค้ดในภาพ — ลองเข้าใกล้ขึ้น/เพิ่มแสง แล้วถ่ายใหม่');
+      }).catch(function(){ setSS('scanStatus','err','❌ วิเคราะห์ภาพผิดพลาด'); });
+    };
   }else{
     loadZXing(function(ok){
       if(!ok){
@@ -868,6 +894,21 @@ function startDetect(vid){
       }catch(e){
         setSS('scanStatus','err','❌ ตัวอ่านบาร์โค้ดทำงานผิดพลาด: '+e.message);
       }
+      // ถ่ายภาพนิ่งแล้ว decode ครั้งเดียว — มักแม่นกว่าการอ่านจากวิดีโอสดบน iOS Safari
+      // เพราะกล้อง iPhone ผ่านเว็บมักโฟกัสช้า/ไม่ต่อเนื่องระหว่างสตรีมวิดีโอ
+      _manualCapture=function(){
+        if(!camOn) return;
+        setSS('scanStatus','idle','🔍 กำลังวิเคราะห์ภาพนิ่ง...');
+        var canvas=document.createElement('canvas');
+        canvas.width=vid.videoWidth||1280; canvas.height=vid.videoHeight||720;
+        canvas.getContext('2d').drawImage(vid,0,0,canvas.width,canvas.height);
+        var dataUrl=canvas.toDataURL('image/png');
+        new ZXing.BrowserMultiFormatReader().decodeFromImage(undefined, dataUrl).then(function(res){
+          if(res) onCode(res.getText().trim());
+        }).catch(function(){
+          setSS('scanStatus','err','❌ ไม่พบบาร์โค้ดในภาพ — ลองเข้าใกล้ขึ้น/เพิ่มแสง แล้วถ่ายใหม่');
+        });
+      };
     });
   }
 }
