@@ -404,6 +404,7 @@ function unlockAudio(){
     // เช่น ตอนสลับแอป/พับจอ — คอยเช็คแล้วปลุกกลับให้อัตโนมัติทุก 5 วิ
     setInterval(function(){
       if(audioCtx && audioCtx.state==='suspended') audioCtx.resume().catch(function(){});
+      if(window.speechSynthesis && speechSynthesis.paused) speechSynthesis.resume();
     },5000);
     // จุดชนวน speechSynthesis (เสียงพูด) ไว้ล่วงหน้า — iOS Safari ต้องปลุกครั้งแรกในจังหวะแตะหน้าจอเช่นกัน
     if(window.speechSynthesis) speechSynthesis.getVoices();
@@ -437,16 +438,36 @@ function playFound(isT){
   else    { beep(700,.10); setTimeout(()=>beep(950,.20),130); if(navigator.vibrate) navigator.vibrate(60); }
 }
 function playNone(){ beep(300,.15); setTimeout(()=>beep(200,.25),170); if(navigator.vibrate) navigator.vibrate([40,40,40]); }
+var _voicesReady=false, _voiceList=[];
+function refreshVoices(){
+  if(!window.speechSynthesis) return;
+  _voiceList=speechSynthesis.getVoices()||[];
+  if(_voiceList.length) _voicesReady=true;
+}
+if(window.speechSynthesis){
+  refreshVoices();
+  speechSynthesis.onvoiceschanged=refreshVoices;
+}
+function pickVoice(){
+  if(!_voiceList.length) return null;
+  var th=_voiceList.find(function(v){ return /^th/i.test(v.lang); });
+  return th || _voiceList[0]; // ไม่มีเสียงไทย ให้ใช้เสียงแรกที่มีแทน ดีกว่าเงียบไปเลย
+}
 function speak(txt){
   if(!window.speechSynthesis)return;
   try{
+    if(speechSynthesis.paused) speechSynthesis.resume();
     speechSynthesis.cancel();
-    setTimeout(()=>{
+    setTimeout(function(){
+      if(!_voicesReady) refreshVoices();
       var u=new SpeechSynthesisUtterance(txt);
-      u.lang='th-TH'; u.volume=1; u.rate=1.1; u.pitch=1;
+      var v=pickVoice();
+      if(v){ u.voice=v; u.lang=v.lang; } else { u.lang='th-TH'; }
+      u.volume=1; u.rate=1.1; u.pitch=1;
+      u.onerror=function(e){ console.warn('[speak] error', e.error||e); };
       speechSynthesis.speak(u);
     },80);
-  }catch(e){}
+  }catch(e){ console.warn('[speak] exception', e); }
 }
 
 // ── PIN ────────────────────────────────────────────────────────────
